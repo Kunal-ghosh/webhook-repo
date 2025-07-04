@@ -6,7 +6,7 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app)
 
-client = MongoClient("mongodb+srv://kunalghosh5135:0dVTHIl9bQm2jBYT@cluster0.i83ic20.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")
+client = MongoClient("paste your url")
 
 db = client["webhook_db"]
 collection = db["events"]
