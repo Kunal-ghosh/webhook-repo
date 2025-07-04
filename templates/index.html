@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub Webhook Events</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #2c3e50;
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .main-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 12px;
+            letter-spacing: -0.025em;
+        }
+
+        .header-subtitle {
+            color: #718096;
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        .events-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .events-header {
+            background: #f8fafc;
+            padding: 20px 30px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .events-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .events-title::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #48bb78;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .events-list {
+            padding: 0;
+            margin: 30px;
+            list-style: none;
+        }
+
+        .events-list li {
+            padding: 20px 30px;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background-color 0.2s ease;
+            position: relative;
+        }
+
+        .events-list li:last-child {
+            border-bottom: none;
+        }
+
+        .events-list li:hover {
+            background-color: #f8fafc;
+        }
+
+        .event-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .event-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .event-icon.push {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .event-icon.pull_request {
+            background: #bee3f8;
+            color: #2a4365;
+        }
+
+        .event-text {
+            flex: 1;
+            font-size: 0.95rem;
+            color: #4a5568;
+        }
+
+        .event-author {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .event-branch {
+            background: #edf2f7;
+            color: #4a5568;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+        }
+
+        .event-time {
+            color: #a0aec0;
+            font-size: 0.85rem;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .empty-state {
+            padding: 60px 30px;
+            text-align: center;
+            color: #a0aec0;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            font-size: 0.95rem;
+        }
+
+        .status-bar {
+            background: #f8fafc;
+            padding: 15px 30px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: #718096;
+        }
+        .event-card {
+            padding: 20px 30px;
+            border-bottom: 1px solid #f1f5f9;
+            position: relative;
+            /* border: 1px solid rgba(0, 0, 0, 0.05); */
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: #48bb78;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 20px 15px;
+            }
+
+            .header {
+                padding: 30px 20px;
+                margin-bottom: 30px;
+            }
+
+            h2 {
+                font-size: 2rem;
+            }
+
+            .events-header,
+            .events-list li,
+            .status-bar {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            .event-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .event-time {
+                margin-left: 0;
+                align-self: flex-end;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-container {
+                padding: 15px 10px;
+            }
+
+            .header {
+                padding: 25px 15px;
+            }
+
+            h2 {
+                font-size: 1.75rem;
+            }
+
+            .events-header,
+            .events-list li,
+            .status-bar {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h2>GitHub Webhook Event Tracker</h2>
+            <p class="header-subtitle">Monitor repository activities in real-time</p>
+        </div>
+
+        <div class="events-container">
+            <div class="events-header">
+                <div class="events-title">Recent Events</div>
+            </div>
+
+            <ul class="events-list" id="events">
+                <li>
+                    <div class="event-content">
+                        <div class="event-icon push">P</div>
+                        <div class="event-text">
+                            <span class="event-author">Loading...</span>
+                        </div>
+                        <div class="event-time">Just now</div>
+                    </div>
+                </li>
+            </ul>
+
+            <div class="status-bar">
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>Live monitoring active</span>
+                </div>
+                <span>Auto-refresh every 15s</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/script.js"></script>
+</body>
+
+</html>
